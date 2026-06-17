@@ -71,8 +71,23 @@ export async function POST(request: NextRequest) {
       focusShift: report.focusShift
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const isValidationError =
+      message.startsWith("Invalid") ||
+      message.startsWith("Name, email") ||
+      message.startsWith("Please") ||
+      message.startsWith("Missing or invalid");
+
+    if (!isValidationError) {
+      console.error("Submission failed", error);
+    }
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Could not submit assessment." },
+      {
+        error: isValidationError
+          ? message
+          : "We could not create your report right now. Please try again in a moment."
+      },
       { status: 400 }
     );
   }
