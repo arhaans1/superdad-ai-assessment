@@ -1,0 +1,10 @@
+.next
+node_modules
+dist
+.env
+.env*.local
+prisma/dev.db
+prisma/dev.db-journal
+*.tsbuildinfo
+work/.npm-cache
+work/admin-cookies.txt
