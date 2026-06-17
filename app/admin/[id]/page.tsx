@@ -4,6 +4,7 @@ import { ScoreBars } from "@/components/ScoreBars";
 import { ScoreRadar } from "@/components/ScoreRadar";
 import { isAdminAuthenticated } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { questions } from "@/lib/questions";
 import type { AssessmentAnswer, Scores } from "@/lib/types";
 
 const answerLabels: Record<string, string> = {
@@ -25,6 +26,19 @@ const answerLabels: Record<string, string> = {
   q16: "Recent moment that stayed",
   q17: "90-day change"
 };
+
+function displayAnswer(answer: AssessmentAnswer): string {
+  const question = questions.find((item) => item.id === answer.questionId);
+
+  if (question?.kind === "mcq" && typeof answer.value === "number") {
+    return (
+      question.options.find((option) => option.value === answer.value)?.label ||
+      String(answer.value)
+    );
+  }
+
+  return String(answer.value);
+}
 
 export default async function SubmissionDetailPage({
   params
@@ -96,9 +110,6 @@ export default async function SubmissionDetailPage({
             <p>
               <strong>City:</strong> {submission.city}
             </p>
-            <p>
-              <strong>Model:</strong> {submission.aiModel || "Unknown"}
-            </p>
           </div>
           <div className="data-card">
             <h2 className="section-heading">Scores</h2>
@@ -132,7 +143,7 @@ export default async function SubmissionDetailPage({
                   <div className="score-row-top">
                     <span>{answerLabels[answer.questionId] || answer.questionId}</span>
                   </div>
-                  <div>{String(answer.value)}</div>
+                  <div>{displayAnswer(answer)}</div>
                 </div>
               ))}
             </div>
