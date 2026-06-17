@@ -7,26 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { questions } from "@/lib/questions";
 import type { AssessmentAnswer, Scores } from "@/lib/types";
 
-const answerLabels: Record<string, string> = {
-  q1: "Fully-present weekday time",
-  q2: "Predictability at home",
-  q3: "Home time when work intensifies",
-  q4: "Responsibility for emotional connection",
-  q5: "Instinct when something feels off",
-  q6: "Belief in control to change family life",
-  q7: "Child's inner world",
-  q8: "Child comes first with important things",
-  q9: "Emotional climate with partner",
-  q10: "Investment in learning fatherhood",
-  q11: "Intentional family ritual",
-  q12: "Working on self",
-  q13: "Work initiative",
-  q14: "Work team play",
-  q15: "Best energy at work vs family",
-  q16: "Recent moment that stayed",
-  q17: "90-day change"
-};
-
 function displayAnswer(answer: AssessmentAnswer): string {
   const question = questions.find((item) => item.id === answer.questionId);
 
@@ -38,6 +18,10 @@ function displayAnswer(answer: AssessmentAnswer): string {
   }
 
   return String(answer.value);
+}
+
+function displayQuestion(answer: AssessmentAnswer): string {
+  return questions.find((item) => item.id === answer.questionId)?.prompt || answer.questionId;
 }
 
 export default async function SubmissionDetailPage({
@@ -141,7 +125,7 @@ export default async function SubmissionDetailPage({
               {answers.map((answer) => (
                 <div className="score-row" key={answer.questionId}>
                   <div className="score-row-top">
-                    <span>{answerLabels[answer.questionId] || answer.questionId}</span>
+                    <span>{displayQuestion(answer)}</span>
                   </div>
                   <div>{displayAnswer(answer)}</div>
                 </div>
