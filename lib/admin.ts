@@ -1,18 +1,29 @@
+import type { Submission } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
+export type AdminStats = Awaited<ReturnType<typeof buildStats>>;
+
 export async function getAdminStats() {
-  const [submissions, today] = await Promise.all([
-    prisma.submission.findMany({
+  try {
+    const submissions = await prisma.submission.findMany({
       orderBy: { createdAt: "desc" }
-    }),
-    prisma.submission.count({
-      where: {
-        createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0))
-        }
-      }
-    })
-  ]);
+    });
+
+    return buildStats(submissions);
+  } catch (error) {
+    console.error("Admin dashboard failed to load submissions", error);
+    return {
+      ...buildStats([]),
+      error:
+        "Could not load submissions right now. Please refresh in a moment, and check the Supabase connection if this keeps happening."
+    };
+  }
+}
+
+function buildStats(submissions: Submission[]) {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const today = submissions.filter((submission) => submission.createdAt >= startOfToday).length;
 
   const distribution = submissions.reduce<Record<string, number>>((acc, submission) => {
     acc[submission.archetypeName] = (acc[submission.archetypeName] || 0) + 1;
@@ -35,6 +46,7 @@ export async function getAdminStats() {
     today,
     mostCommonArchetype,
     averageOverall,
-    distribution
+    distribution,
+    error: undefined as string | undefined
   };
 }
