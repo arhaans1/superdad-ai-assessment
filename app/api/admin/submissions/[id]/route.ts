@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getSubmission } from "@/lib/submissions";
 
 export async function GET(
   _request: Request,
@@ -11,7 +11,7 @@ export async function GET(
   }
 
   const { id } = await context.params;
-  const submission = await prisma.submission.findUnique({ where: { id } });
+  const submission = await getSubmission(id);
 
   if (!submission) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
