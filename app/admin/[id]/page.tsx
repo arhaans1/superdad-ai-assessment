@@ -34,7 +34,30 @@ export default async function SubmissionDetailPage({
   }
 
   const { id } = await params;
-  const submission = await prisma.submission.findUnique({ where: { id } });
+  let submission;
+  try {
+    submission = await prisma.submission.findUnique({ where: { id } });
+  } catch (error) {
+    console.error("Admin detail failed to load submission", error);
+    return (
+      <div className="admin-shell">
+        <div className="admin-top">
+          <div className="content-inner">
+            <Link href="/admin" style={{ color: "#FFFFFF" }}>
+              Back to dashboard
+            </Link>
+            <h1 className="section-heading" style={{ color: "#FFFFFF", marginTop: "1rem" }}>
+              Submission unavailable
+            </h1>
+            <p style={{ margin: 0, color: "rgba(255,255,255,0.82)" }}>
+              Could not load this submission right now. Please refresh in a moment.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!submission) {
     notFound();
   }
