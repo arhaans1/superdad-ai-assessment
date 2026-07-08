@@ -1,5 +1,5 @@
 import { isAdminAuthenticated } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { listSubmissions } from "@/lib/submissions";
 
 const headers = [
   "createdAt",
@@ -37,9 +37,7 @@ export async function GET() {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const submissions = await prisma.submission.findMany({
-    orderBy: { createdAt: "desc" }
-  });
+  const submissions = await listSubmissions();
 
   const rows = [
     headers.join(","),
