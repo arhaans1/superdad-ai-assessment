@@ -3,8 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { ScoreBars } from "@/components/ScoreBars";
 import { ScoreRadar } from "@/components/ScoreRadar";
 import { isAdminAuthenticated } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { questions } from "@/lib/questions";
+import { getSubmission } from "@/lib/submissions";
 import type { AssessmentAnswer, Scores } from "@/lib/types";
 
 function displayAnswer(answer: AssessmentAnswer): string {
@@ -36,7 +36,7 @@ export default async function SubmissionDetailPage({
   const { id } = await params;
   let submission;
   try {
-    submission = await prisma.submission.findUnique({ where: { id } });
+    submission = await getSubmission(id);
   } catch (error) {
     console.error("Admin detail failed to load submission", error);
     return (
