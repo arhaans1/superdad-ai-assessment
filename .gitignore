@@ -8,3 +8,5 @@ prisma/dev.db-journal
 *.tsbuildinfo
 work/.npm-cache
 work/admin-cookies.txt
+work/
+.DS_Store
