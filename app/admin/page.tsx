@@ -60,6 +60,15 @@ export default async function AdminPage({
           ))}
         </section>
 
+        {stats.error ? (
+          <section className="content-section" style={{ paddingInline: 0 }}>
+            <div className="data-card">
+              <h2 className="section-heading">Connection issue</h2>
+              <p className="error-text">{stats.error}</p>
+            </div>
+          </section>
+        ) : null}
+
         <section className="content-section" style={{ paddingInline: 0 }}>
           <div className="data-card">
             <h2 className="section-heading">Archetype distribution</h2>
