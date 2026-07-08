@@ -1,13 +1,11 @@
 import type { Submission } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { listSubmissions } from "@/lib/submissions";
 
 export type AdminStats = Awaited<ReturnType<typeof buildStats>>;
 
 export async function getAdminStats() {
   try {
-    const submissions = await prisma.submission.findMany({
-      orderBy: { createdAt: "desc" }
-    });
+    const submissions = await listSubmissions();
 
     return buildStats(submissions);
   } catch (error) {
