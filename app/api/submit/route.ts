@@ -8,6 +8,7 @@ import { validateSubmitPayload } from "@/lib/validation";
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 8;
+const SAVE_RETRY_DELAYS_MS = [250, 750];
 
 function clientKey(request: NextRequest): string {
   return (
@@ -29,6 +30,59 @@ function isLimited(key: string): boolean {
   return current.count > MAX_REQUESTS;
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function saveSubmissionWithRetry({
+  payload,
+  scores,
+  archetype,
+  report,
+  userAgent
+}: {
+  payload: ReturnType<typeof validateSubmitPayload>;
+  scores: ReturnType<typeof computeScores>;
+  archetype: ReturnType<typeof determineArchetype>;
+  report: Awaited<ReturnType<typeof generateReport>>;
+  userAgent: string | null;
+}) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= SAVE_RETRY_DELAYS_MS.length; attempt += 1) {
+    try {
+      return await prisma.submission.create({
+        data: {
+          name: payload.name,
+          email: payload.email,
+          phone: payload.phone,
+          city: payload.city,
+          answers: payload.answers as Prisma.InputJsonValue,
+          scoreConsistency: scores.consistency,
+          scoreOwnership: scores.ownership,
+          scoreRelationships: scores.relationships,
+          scoreInitiative: scores.initiative,
+          scoreWork: scores.work,
+          scoreOverall: scores.overall,
+          archetypeKey: archetype.key,
+          archetypeName: archetype.name,
+          diagnosis: report.diagnosis,
+          focusShift: report.focusShift,
+          aiModel: report.aiModel,
+          userAgent
+        }
+      });
+    } catch (error) {
+      lastError = error;
+      const retryDelay = SAVE_RETRY_DELAYS_MS[attempt];
+      if (retryDelay === undefined) break;
+      await wait(retryDelay);
+    }
+  }
+
+  throw lastError;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const key = clientKey(request);
@@ -40,31 +94,24 @@ export async function POST(request: NextRequest) {
     const scores = computeScores(payload.answers);
     const archetype = determineArchetype(scores);
     const report = await generateReport({ archetype, scores, answers: payload.answers });
+    let submissionId: string | undefined;
 
-    const submission = await prisma.submission.create({
-      data: {
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone,
-        city: payload.city,
-        answers: payload.answers as Prisma.InputJsonValue,
-        scoreConsistency: scores.consistency,
-        scoreOwnership: scores.ownership,
-        scoreRelationships: scores.relationships,
-        scoreInitiative: scores.initiative,
-        scoreWork: scores.work,
-        scoreOverall: scores.overall,
-        archetypeKey: archetype.key,
-        archetypeName: archetype.name,
-        diagnosis: report.diagnosis,
-        focusShift: report.focusShift,
-        aiModel: report.aiModel,
+    try {
+      const submission = await saveSubmissionWithRetry({
+        payload,
+        scores,
+        archetype,
+        report,
         userAgent: request.headers.get("user-agent")
-      }
-    });
+      });
+      submissionId = submission.id;
+    } catch (error) {
+      console.error("Submission save failed after retries", error);
+    }
 
     return NextResponse.json({
-      id: submission.id,
+      id: submissionId,
+      saved: Boolean(submissionId),
       archetype,
       scores,
       diagnosis: report.diagnosis,
