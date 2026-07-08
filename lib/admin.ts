@@ -15,7 +15,7 @@ export async function getAdminStats() {
     return {
       ...buildStats([]),
       error:
-        "Could not load submissions right now. Please refresh in a moment, and check the Supabase connection if this keeps happening."
+        "Could not load submissions because the app cannot reach Supabase from Vercel. Check that Vercel DATABASE_URL uses the Supabase pooler on port 6543 and ends with ?pgbouncer=true&connection_limit=1."
     };
   }
 }
