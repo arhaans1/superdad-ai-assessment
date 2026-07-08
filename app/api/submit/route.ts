@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { determineArchetype, computeScores } from "@/lib/scoring";
 import { generateReport } from "@/lib/report";
-import { prisma } from "@/lib/prisma";
+import { createSubmission } from "@/lib/submissions";
 import { validateSubmitPayload } from "@/lib/validation";
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
@@ -51,26 +50,24 @@ async function saveSubmissionWithRetry({
 
   for (let attempt = 0; attempt <= SAVE_RETRY_DELAYS_MS.length; attempt += 1) {
     try {
-      return await prisma.submission.create({
-        data: {
-          name: payload.name,
-          email: payload.email,
-          phone: payload.phone,
-          city: payload.city,
-          answers: payload.answers as Prisma.InputJsonValue,
-          scoreConsistency: scores.consistency,
-          scoreOwnership: scores.ownership,
-          scoreRelationships: scores.relationships,
-          scoreInitiative: scores.initiative,
-          scoreWork: scores.work,
-          scoreOverall: scores.overall,
-          archetypeKey: archetype.key,
-          archetypeName: archetype.name,
-          diagnosis: report.diagnosis,
-          focusShift: report.focusShift,
-          aiModel: report.aiModel,
-          userAgent
-        }
+      return await createSubmission({
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone,
+        city: payload.city,
+        answers: payload.answers,
+        scoreConsistency: scores.consistency,
+        scoreOwnership: scores.ownership,
+        scoreRelationships: scores.relationships,
+        scoreInitiative: scores.initiative,
+        scoreWork: scores.work,
+        scoreOverall: scores.overall,
+        archetypeKey: archetype.key,
+        archetypeName: archetype.name,
+        diagnosis: report.diagnosis,
+        focusShift: report.focusShift,
+        aiModel: report.aiModel,
+        userAgent
       });
     } catch (error) {
       lastError = error;
