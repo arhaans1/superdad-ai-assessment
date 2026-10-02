@@ -55,17 +55,26 @@ async function saveSubmissionWithRetry({
         email: payload.email,
         phone: payload.phone,
         city: payload.city,
+        fatherhoodStage: payload.fatherhoodStage,
         answers: payload.answers,
-        scoreConsistency: scores.consistency,
-        scoreOwnership: scores.ownership,
-        scoreRelationships: scores.relationships,
-        scoreInitiative: scores.initiative,
-        scoreWork: scores.work,
+        scoreIdentity: scores.identity,
+        scoreConditioning: scores.conditioning,
+        scoreResponsibility: scores.responsibility,
+        scoreEmotional: scores.emotional,
+        scoreDecisionMaking: scores.decision_making,
+        scoreFear: scores.fear,
+        scoreAlignment: scores.alignment,
         scoreOverall: scores.overall,
         archetypeKey: archetype.key,
         archetypeName: archetype.name,
-        diagnosis: report.diagnosis,
-        focusShift: report.focusShift,
+        diagnosis: [
+          report.currentPattern,
+          report.beneathSurface,
+          ...report.attentionAreas.map((area) => `${area.title}: ${area.insight}`)
+        ].join("\n\n"),
+        focusShift: report.nextReflections.join("\n"),
+        reportJson: report,
+        assessmentVersion: "intentional-father-v2",
         aiModel: report.aiModel,
         userAgent
       });
@@ -90,7 +99,12 @@ export async function POST(request: NextRequest) {
     const payload = validateSubmitPayload(await request.json());
     const scores = computeScores(payload.answers);
     const archetype = determineArchetype(scores);
-    const report = await generateReport({ archetype, scores, answers: payload.answers });
+    const report = await generateReport({
+      archetype,
+      scores,
+      answers: payload.answers,
+      fatherhoodStage: payload.fatherhoodStage
+    });
     let submissionId: string | undefined;
 
     try {
@@ -110,9 +124,7 @@ export async function POST(request: NextRequest) {
       id: submissionId,
       saved: Boolean(submissionId),
       archetype,
-      scores,
-      diagnosis: report.diagnosis,
-      focusShift: report.focusShift
+      report
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";

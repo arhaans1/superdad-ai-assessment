@@ -1,11 +1,13 @@
 import type { Scores } from "@/lib/types";
 
 const rows = [
-  ["consistency", "Consistency"],
-  ["ownership", "Ownership"],
-  ["relationships", "Relationships"],
-  ["initiative", "Daily Initiative"],
-  ["work", "Work Integration"]
+  ["identity", "Identity"],
+  ["conditioning", "Inherited expectations"],
+  ["responsibility", "Whole-life responsibility"],
+  ["emotional", "Emotional patterns"],
+  ["decision_making", "Decision-making"],
+  ["fear", "Fear and uncertainty"],
+  ["alignment", "Life alignment"]
 ] as const;
 
 export function ScoreBars({ scores }: { scores: Scores }) {
@@ -19,7 +21,7 @@ export function ScoreBars({ scores }: { scores: Scores }) {
           </div>
           <div className="bar-track">
             <div
-              className={`bar-fill ${key === "work" ? "work" : ""}`}
+              className="bar-fill"
               style={{ width: `${scores[key]}%` }}
             />
           </div>

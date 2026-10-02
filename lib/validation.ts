@@ -1,5 +1,6 @@
 import { scoredQuestions, textQuestions } from "@/lib/questions";
-import type { AssessmentAnswer, SubmitPayload } from "@/lib/types";
+import { fatherhoodStages } from "@/lib/types";
+import type { AssessmentAnswer, FatherhoodStage, SubmitPayload } from "@/lib/types";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,6 +14,7 @@ export function validateSubmitPayload(body: unknown): SubmitPayload {
   const email = clean(payload.email).toLowerCase();
   const phone = clean(payload.phone);
   const city = clean(payload.city);
+  const fatherhoodStage = clean(payload.fatherhoodStage);
 
   if (!name || !email || !phone || !city) {
     throw new Error("Name, email, phone, and city are required.");
@@ -20,6 +22,10 @@ export function validateSubmitPayload(body: unknown): SubmitPayload {
 
   if (!emailPattern.test(email)) {
     throw new Error("Please enter a valid email address.");
+  }
+
+  if (!fatherhoodStages.includes(fatherhoodStage as FatherhoodStage)) {
+    throw new Error("Please choose where you are in your fatherhood journey.");
   }
 
   if (!Array.isArray(payload.answers)) {
@@ -43,7 +49,14 @@ export function validateSubmitPayload(body: unknown): SubmitPayload {
     }
   }
 
-  return { name, email, phone, city, answers };
+  return {
+    name,
+    email,
+    phone,
+    city,
+    fatherhoodStage: fatherhoodStage as FatherhoodStage,
+    answers
+  };
 }
 
 function clean(value: unknown): string {

@@ -31,10 +31,15 @@ function buildStats(submissions: Submission[]) {
   const mostCommonArchetype =
     Object.entries(distribution).sort((a, b) => b[1] - a[1])[0]?.[0] || "No data yet";
 
-  const averageOverall = submissions.length
+  const scoredSubmissions = submissions.filter(
+    (submission) =>
+      submission.assessmentVersion === "intentional-father-v2" &&
+      submission.scoreOverall !== null
+  );
+  const averageOverall = scoredSubmissions.length
     ? Math.round(
-        submissions.reduce((sum, submission) => sum + submission.scoreOverall, 0) /
-          submissions.length
+        scoredSubmissions.reduce((sum, submission) => sum + (submission.scoreOverall || 0), 0) /
+          scoredSubmissions.length
       )
     : 0;
 

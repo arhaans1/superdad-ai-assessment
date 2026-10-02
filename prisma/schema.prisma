@@ -9,23 +9,42 @@ datasource db {
 }
 
 model Submission {
-  id                 String   @id @default(cuid())
-  createdAt          DateTime @default(now())
-  name               String
-  email              String
-  phone              String
-  city               String
-  answers            Json
-  scoreConsistency   Int
-  scoreOwnership     Int
-  scoreRelationships Int
-  scoreInitiative    Int
-  scoreWork          Int
-  scoreOverall       Int
-  archetypeKey       String
-  archetypeName      String
-  diagnosis          String
-  focusShift         String
-  aiModel            String?
-  userAgent          String?
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  name                String
+  email               String
+  phone               String
+  city                String
+  fatherhoodStage     String?
+  answers             Json
+  scoreConsistency    Int?
+  scoreOwnership      Int?
+  scoreRelationships  Int?
+  scoreInitiative     Int?
+  scoreWork           Int?
+  scoreIdentity       Int?
+  scoreConditioning   Int?
+  scoreResponsibility Int?
+  scoreEmotional      Int?
+  scoreDecisionMaking Int?
+  scoreFear           Int?
+  scoreAlignment      Int?
+  scoreOverall        Int?
+  archetypeKey        String
+  archetypeName       String
+  diagnosis           String
+  focusShift          String
+  reportJson          Json?
+  assessmentVersion   String   @default("intentional-father-v2")
+  aiModel             String?
+  userAgent           String?
+}
+
+model AssessmentSettings {
+  id             String   @id @default("primary")
+  videoUrl       String   @default("")
+  bookingUrl     String   @default("")
+  videoEnabled   Boolean  @default(false)
+  bookingEnabled Boolean  @default(false)
+  updatedAt      DateTime @updatedAt
 }

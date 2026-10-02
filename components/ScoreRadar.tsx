@@ -12,11 +12,13 @@ import type { Scores } from "@/lib/types";
 
 export function ScoreRadar({ scores }: { scores: Scores }) {
   const data = [
-    { dimension: "Consistency", score: scores.consistency },
-    { dimension: "Ownership", score: scores.ownership },
-    { dimension: "Relationships", score: scores.relationships },
-    { dimension: "Daily Initiative", score: scores.initiative },
-    { dimension: "Work", score: scores.work }
+    { dimension: "Identity", score: scores.identity },
+    { dimension: "Expectations", score: scores.conditioning },
+    { dimension: "Responsibility", score: scores.responsibility },
+    { dimension: "Emotions", score: scores.emotional },
+    { dimension: "Decisions", score: scores.decision_making },
+    { dimension: "Fear", score: scores.fear },
+    { dimension: "Alignment", score: scores.alignment }
   ];
 
   return (

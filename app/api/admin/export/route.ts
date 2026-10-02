@@ -7,18 +7,28 @@ const headers = [
   "email",
   "phone",
   "city",
+  "fatherhoodStage",
   "archetypeName",
-  "scoreConsistency",
-  "scoreOwnership",
-  "scoreRelationships",
-  "scoreInitiative",
-  "scoreWork",
+  "scoreIdentity",
+  "scoreConditioning",
+  "scoreResponsibility",
+  "scoreEmotional",
+  "scoreDecisionMaking",
+  "scoreFear",
+  "scoreAlignment",
   "scoreOverall",
+  "reportJson",
+  "assessmentVersion",
   "answers",
   "diagnosis",
   "focusShift",
   "aiModel",
-  "userAgent"
+  "userAgent",
+  "scoreConsistency",
+  "scoreOwnership",
+  "scoreRelationships",
+  "scoreInitiative",
+  "scoreWork"
 ];
 
 function csvCell(value: unknown): string {
@@ -51,7 +61,7 @@ export async function GET() {
   return new Response(rows.join("\n"), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": "attachment; filename=confident-father-submissions.csv"
+      "Content-Disposition": "attachment; filename=intentional-father-submissions.csv"
     }
   });
 }

@@ -7,17 +7,22 @@ export type SubmissionCreateData = {
   email: string;
   phone: string;
   city: string;
+  fatherhoodStage: string;
   answers: Prisma.InputJsonValue;
-  scoreConsistency: number;
-  scoreOwnership: number;
-  scoreRelationships: number;
-  scoreInitiative: number;
-  scoreWork: number;
+  scoreIdentity: number;
+  scoreConditioning: number;
+  scoreResponsibility: number;
+  scoreEmotional: number;
+  scoreDecisionMaking: number;
+  scoreFear: number;
+  scoreAlignment: number;
   scoreOverall: number;
   archetypeKey: string;
   archetypeName: string;
   diagnosis: string;
   focusShift: string;
+  reportJson: Prisma.InputJsonValue;
+  assessmentVersion: string;
   aiModel?: string | null;
   userAgent?: string | null;
 };
@@ -63,20 +68,43 @@ function normalizeSubmission(raw: Record<string, unknown>): Submission {
     email: String(raw.email),
     phone: String(raw.phone),
     city: String(raw.city),
+    fatherhoodStage:
+      raw.fatherhoodStage === null || raw.fatherhoodStage === undefined
+        ? null
+        : String(raw.fatherhoodStage),
     answers: raw.answers as Prisma.JsonValue,
-    scoreConsistency: Number(raw.scoreConsistency),
-    scoreOwnership: Number(raw.scoreOwnership),
-    scoreRelationships: Number(raw.scoreRelationships),
-    scoreInitiative: Number(raw.scoreInitiative),
-    scoreWork: Number(raw.scoreWork),
-    scoreOverall: Number(raw.scoreOverall),
+    scoreConsistency: nullableNumber(raw.scoreConsistency),
+    scoreOwnership: nullableNumber(raw.scoreOwnership),
+    scoreRelationships: nullableNumber(raw.scoreRelationships),
+    scoreInitiative: nullableNumber(raw.scoreInitiative),
+    scoreWork: nullableNumber(raw.scoreWork),
+    scoreIdentity: nullableNumber(raw.scoreIdentity),
+    scoreConditioning: nullableNumber(raw.scoreConditioning),
+    scoreResponsibility: nullableNumber(raw.scoreResponsibility),
+    scoreEmotional: nullableNumber(raw.scoreEmotional),
+    scoreDecisionMaking: nullableNumber(raw.scoreDecisionMaking),
+    scoreFear: nullableNumber(raw.scoreFear),
+    scoreAlignment: nullableNumber(raw.scoreAlignment),
+    scoreOverall: nullableNumber(raw.scoreOverall),
     archetypeKey: String(raw.archetypeKey),
     archetypeName: String(raw.archetypeName),
     diagnosis: String(raw.diagnosis),
     focusShift: String(raw.focusShift),
+    reportJson:
+      raw.reportJson === null || raw.reportJson === undefined
+        ? null
+        : (raw.reportJson as Prisma.JsonValue),
+    assessmentVersion:
+      raw.assessmentVersion === null || raw.assessmentVersion === undefined
+        ? "legacy"
+        : String(raw.assessmentVersion),
     aiModel: raw.aiModel === null || raw.aiModel === undefined ? null : String(raw.aiModel),
     userAgent: raw.userAgent === null || raw.userAgent === undefined ? null : String(raw.userAgent)
   };
+}
+
+function nullableNumber(value: unknown): number | null {
+  return value === null || value === undefined ? null : Number(value);
 }
 
 export async function createSubmission(data: SubmissionCreateData): Promise<Submission> {

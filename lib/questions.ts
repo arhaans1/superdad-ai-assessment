@@ -1,247 +1,293 @@
-import type { Dimension } from "@/lib/types";
+import type { FatherhoodStage, Gap } from "@/lib/types";
 
 export type QuestionOption = {
   label: string;
   value: number;
 };
 
+type StageCopy = Record<FatherhoodStage, string>;
+
 export type Question =
   | {
       id: string;
       kind: "mcq";
-      dimension: Dimension;
-      prompt: string;
+      gap: Gap;
+      prompt: string | StageCopy;
+      context?: string | StageCopy;
       options: QuestionOption[];
     }
   | {
       id: string;
       kind: "text";
-      prompt: string;
+      prompt: string | StageCopy;
+      context?: string | StageCopy;
       helper: string;
       placeholder: string;
     };
 
-const options = (labels: string[]): QuestionOption[] =>
-  labels.map((label, value) => ({ label, value }));
+export type DisplayQuestion =
+  | (Omit<Extract<Question, { kind: "mcq" }>, "prompt" | "context"> & {
+      prompt: string;
+      context?: string;
+    })
+  | (Omit<Extract<Question, { kind: "text" }>, "prompt" | "context"> & {
+      prompt: string;
+      context?: string;
+    });
+
+const positiveAgreement: QuestionOption[] = [
+  { label: "Strongly agree", value: 0 },
+  { label: "Agree", value: 1 },
+  { label: "It depends", value: 2 },
+  { label: "Disagree", value: 3 },
+  { label: "Strongly disagree", value: 4 }
+];
+
+const negativeAgreement: QuestionOption[] = [
+  { label: "Strongly disagree", value: 0 },
+  { label: "Disagree", value: 1 },
+  { label: "It depends", value: 2 },
+  { label: "Agree", value: 3 },
+  { label: "Strongly agree", value: 4 }
+];
+
+const easeScale: QuestionOption[] = [
+  { label: "Very easy", value: 0 },
+  { label: "Usually easy", value: 1 },
+  { label: "It depends", value: 2 },
+  { label: "Difficult", value: 3 },
+  { label: "Very difficult", value: 4 }
+];
+
+const frequencyPositive: QuestionOption[] = [
+  { label: "Almost always", value: 0 },
+  { label: "Often", value: 1 },
+  { label: "Sometimes", value: 2 },
+  { label: "Rarely", value: 3 },
+  { label: "Almost never", value: 4 }
+];
 
 export const questions: Question[] = [
   {
     id: "q1",
     kind: "mcq",
-    dimension: "consistency",
-    prompt:
-      "On a typical weekday, how much fully-present time (no phone, no distractions) do you spend with your child?",
-    options: options([
-      "Honestly, almost none",
-      "A few minutes here and there",
-      "About 15-20 minutes",
-      "30-45 focused minutes",
-      "An hour or more, consistently"
-    ])
-  },
-  {
-    id: "q13",
-    kind: "mcq",
-    dimension: "work",
-    prompt: "At work, when something needs to be done, how do you typically operate?",
-    options: options([
-      "I wait to be told what to do",
-      "I do my part, but rarely more",
-      "I step up when it's clearly expected",
-      "I often take initiative before being asked",
-      "I consistently lead - I see what's needed and drive it"
-    ])
+    gap: "identity",
+    prompt: "I have a clear sense of the kind of father, partner and man I want to become.",
+    context: "Think beyond what others expect of you.",
+    options: positiveAgreement
   },
   {
     id: "q4",
     kind: "mcq",
-    dimension: "ownership",
-    prompt: "Who do you see as primarily responsible for the emotional connection in your home?",
-    options: options([
-      "My wife - that's really her domain",
-      "Mostly my wife, I help sometimes",
-      "We split it, but she carries more",
-      "We share it fairly equally",
-      "I take full ownership of my part, actively"
-    ])
+    gap: "conditioning",
+    prompt: "I have consciously thought about what being a good father means to me.",
+    context: "Not only what you saw growing up or what others told you.",
+    options: positiveAgreement
   },
   {
     id: "q7",
     kind: "mcq",
-    dimension: "relationships",
-    prompt:
-      "How well do you actually know what's going on in your child's inner world right now - their fears, friends, dreams?",
-    options: options([
-      "I realise I don't really know",
-      "Only the surface",
-      "Some of it",
-      "A good amount",
-      "Deeply - we talk about real things"
-    ])
+    gap: "responsibility",
+    prompt: "I see my responsibility to my family as extending beyond financial provision.",
+    context: "For example: attention, communication, health, support and reliability.",
+    options: positiveAgreement
   },
   {
     id: "q10",
     kind: "mcq",
-    dimension: "initiative",
+    gap: "emotional",
     prompt:
-      "Have you ever invested in learning how to be a better father (book, course, coach, programme)?",
-    options: options([
-      "Never - it never occurred to me",
-      "I've thought about it but never did",
-      "I've read/watched a little",
-      "Yes, a few things",
-      "Yes - I actively keep learning and applying"
-    ])
+      "I notice when stress or pressure is beginning to influence how I communicate with people close to me.",
+    options: positiveAgreement
+  },
+  {
+    id: "q13",
+    kind: "mcq",
+    gap: "decision_making",
+    prompt: "When I know an important change is needed in my personal life, I take concrete action.",
+    options: positiveAgreement
+  },
+  {
+    id: "q16",
+    kind: "mcq",
+    gap: "fear",
+    prompt: "I can recognise when fear of making the wrong decision is causing me to delay action.",
+    context: "Fear can look like overthinking, excessive planning or waiting for certainty.",
+    options: positiveAgreement
+  },
+  {
+    id: "q19",
+    kind: "mcq",
+    gap: "alignment",
+    prompt: "My calendar reflects the priorities I say are most important to me.",
+    options: positiveAgreement
   },
   {
     id: "q2",
     kind: "mcq",
-    dimension: "consistency",
-    prompt:
-      "How predictable are you as a presence at home - can your family count on you showing up the same way each day?",
-    options: options([
-      "Not at all - it depends entirely on my work and mood",
-      "Rarely - most days are unpredictable",
-      "Somewhat - good weeks and bad weeks",
-      "Mostly - I'm fairly steady",
-      "Completely - they know exactly what to expect from me"
-    ])
-  },
-  {
-    id: "q14",
-    kind: "mcq",
-    dimension: "work",
-    prompt: "How would your colleagues describe you as a team player?",
-    options: options([
-      "I mostly keep to myself / work alone",
-      "I do my bit but don't really collaborate",
-      "I'm cooperative when needed",
-      "I'm a strong, dependable teammate",
-      "I actively lift the whole team - people are better with me around"
-    ])
+    gap: "identity",
+    prompt: "I feel clear about what I personally want from the next chapter of my life.",
+    options: positiveAgreement
   },
   {
     id: "q5",
     kind: "mcq",
-    dimension: "ownership",
-    prompt: "When something feels \"off\" between you and your child, what's your instinct?",
-    options: options([
-      "Wait for it to pass on its own",
-      "Hope my wife handles it",
-      "Worry about it but not act",
-      "Bring it up when I find the right moment",
-      "Take initiative to understand and address it directly"
-    ])
+    gap: "conditioning",
+    prompt: "I can tell the difference between what I genuinely value and what I simply learned to expect of myself.",
+    options: positiveAgreement
   },
   {
     id: "q8",
     kind: "mcq",
-    dimension: "relationships",
-    prompt: "When was the last time your child came to YOU first with something important?",
-    options: options([
-      "I can't remember it happening",
-      "It's been a very long time",
-      "Occasionally, for practical things",
-      "Fairly recently",
-      "Regularly - I'm often their first call"
-    ])
+    gap: "responsibility",
+    prompt: {
+      soon_to_be:
+        "I actively support my partner and take part in preparing for the changes our family is going through.",
+      baby_toddler:
+        "I actively support my partner and share the demands of our new family life.",
+      young_preteen:
+        "I take responsibility not only for my child's needs, but also for how I communicate, respond and show up around them."
+    },
+    options: positiveAgreement
   },
   {
     id: "q11",
     kind: "mcq",
-    dimension: "initiative",
-    prompt: "Do you have any daily or weekly ritual that you do WITH your family, on purpose?",
-    options: options([
-      "No, nothing intentional",
-      "Not really, it's all ad hoc",
-      "One loose thing, inconsistently",
-      "Yes, one or two we mostly keep",
-      "Yes - intentional rituals we protect"
-    ])
+    gap: "emotional",
+    prompt: {
+      soon_to_be:
+        "When conversations about the baby, finances or the future feel uncertain, how easy is it for you to pause before reacting?",
+      baby_toddler:
+        "When tiredness or a disrupted routine puts you under pressure, how easy is it for you to pause before reacting?",
+      young_preteen:
+        "When your child disagrees or pushes a boundary, how easy is it for you to pause before reacting?"
+    },
+    options: easeScale
+  },
+  {
+    id: "q14",
+    kind: "mcq",
+    gap: "decision_making",
+    prompt: "I postpone important personal decisions because work is busy.",
+    context: "Think about health, relationships, boundaries or an overdue conversation.",
+    options: negativeAgreement
+  },
+  {
+    id: "q17",
+    kind: "mcq",
+    gap: "fear",
+    prompt: "Concern about financial security influences how much time and energy I give to work.",
+    context: "Providing matters. This asks whether concern sometimes makes it hard to switch off.",
+    options: negativeAgreement
+  },
+  {
+    id: "q20",
+    kind: "mcq",
+    gap: "alignment",
+    prompt: {
+      soon_to_be:
+        "When my partner wants to discuss the pregnancy, baby or our future family, I can be mentally present rather than distracted by work.",
+      baby_toddler:
+        "When I am home with my partner and child, I can mentally disconnect from work and be present.",
+      young_preteen:
+        "When my child wants my attention, I can be fully present rather than mentally occupied by work or other pressures."
+    },
+    options: frequencyPositive
   },
   {
     id: "q3",
     kind: "mcq",
-    dimension: "consistency",
-    prompt: "When work gets intense, what usually happens to your time at home?",
-    options: options([
-      "Home time disappears completely",
-      "It shrinks badly and stays shrunk",
-      "It takes a hit but I recover after a while",
-      "I protect it most of the time",
-      "I hold my home boundaries no matter what"
-    ])
-  },
-  {
-    id: "q15",
-    kind: "mcq",
-    dimension: "work",
+    gap: "identity",
     prompt:
-      "Think about the energy, focus and intentionality you bring to your career. Now compare it to what you bring to your family life. How do they match up?",
-    options: options([
-      "Work gets nearly all of my best energy; family gets the leftovers",
-      "Work clearly gets more of my best self",
-      "Work gets a bit more, but I'm trying to balance it",
-      "They're fairly evenly matched",
-      "I bring my best, most intentional self to my family - even more than to work"
-    ])
+      "Even while meeting my responsibilities, I still feel connected to who I am outside my roles.",
+    context: "Your roles may include professional, provider, partner and father.",
+    options: positiveAgreement
   },
   {
     id: "q6",
     kind: "mcq",
-    dimension: "ownership",
-    prompt: "How much do you believe the state of your family life is within your control to change?",
-    options: options([
-      "Not much - it's just how things are now",
-      "A little, but the damage feels done",
-      "Maybe, if circumstances change first",
-      "Largely - if I do the work",
-      "Completely - change in me creates change around me"
-    ])
+    gap: "conditioning",
+    prompt: "I feel free to build my own version of fatherhood rather than automatically repeating what I experienced growing up.",
+    context: "You can keep what serves you and expand what no longer fits.",
+    options: positiveAgreement
   },
   {
     id: "q9",
     kind: "mcq",
-    dimension: "relationships",
-    prompt: "How would you describe the emotional climate between you and your partner lately?",
-    options: options([
-      "Distant - we're more like roommates",
-      "Strained or tense",
-      "Functional but flat",
-      "Warm most of the time",
-      "Genuinely connected and growing"
-    ])
+    gap: "responsibility",
+    prompt: "I take ownership when an important part of my family or personal life needs attention.",
+    options: positiveAgreement
   },
   {
     id: "q12",
     kind: "mcq",
-    dimension: "initiative",
-    prompt:
-      "When you think about working on yourself (your stress, your patterns, your growth), where are you?",
-    options: options([
-      "I don't have the time or energy for that",
-      "I know I should but haven't started",
-      "I dabble occasionally",
-      "I work on it semi-regularly",
-      "It's a consistent priority - I know it makes me a better father"
-    ])
+    gap: "emotional",
+    prompt: "Work-related pressure rarely determines how I behave at home.",
+    options: positiveAgreement
   },
   {
-    id: "q16",
-    kind: "text",
-    prompt:
-      "Describe one recent moment with your child or family that stayed with you - good or hard. What happened, and how did it make you feel?",
-    helper: "Write 2-4 sentences.",
-    placeholder: "There are no wrong answers - just write what comes to mind."
+    id: "q15",
+    kind: "mcq",
+    gap: "decision_making",
+    prompt: "My personal life receives the same deliberate decision-making that I apply professionally.",
+    options: positiveAgreement
   },
   {
-    id: "q17",
+    id: "q18",
+    kind: "mcq",
+    gap: "fear",
+    prompt: "I am comfortable making meaningful life changes even when there is some uncertainty involved.",
+    options: positiveAgreement
+  },
+  {
+    id: "q21",
+    kind: "mcq",
+    gap: "alignment",
+    prompt: "My professional ambition and family priorities feel capable of strengthening each other rather than constantly competing.",
+    context: "This is not about becoming less ambitious. It is about building a life where both can matter.",
+    options: positiveAgreement
+  },
+  {
+    id: "q22",
     kind: "text",
-    prompt: "If one thing could change about your life as a father in the next 90 days, what would it be?",
-    helper: "Write 1-2 sentences.",
-    placeholder: "Name the change you would most want to feel at home."
+    prompt: {
+      soon_to_be:
+        "Describe one recent moment about becoming a father that stayed with you. What happened, and what did it bring up for you?",
+      baby_toddler:
+        "Describe one recent moment with your partner or child that stayed with you. What happened, and how did it make you feel?",
+      young_preteen:
+        "Describe one recent moment with your family that stayed with you—good or difficult. What happened, and how did it make you feel?"
+    },
+    helper: "Write 2–4 sentences.",
+    placeholder: "There are no wrong answers—write what comes to mind."
+  },
+  {
+    id: "q23",
+    kind: "text",
+    prompt: "If you could intentionally rebuild one part of your life in the next 90 days, what would it be?",
+    context: "It could involve family, your relationship, health, work, confidence or direction.",
+    helper: "Write 1–2 sentences.",
+    placeholder: "Name the change that would matter most to you."
   }
 ];
 
-export const scoredQuestions = questions.filter((question) => question.kind === "mcq");
-export const textQuestions = questions.filter((question) => question.kind === "text");
+function stageText(copy: string | StageCopy | undefined, stage: FatherhoodStage) {
+  if (!copy) return undefined;
+  return typeof copy === "string" ? copy : copy[stage];
+}
+
+export function questionsForStage(stage: FatherhoodStage): DisplayQuestion[] {
+  return questions.map((question) => ({
+    ...question,
+    prompt: stageText(question.prompt, stage) || "",
+    context: stageText(question.context, stage)
+  })) as DisplayQuestion[];
+}
+
+export const scoredQuestions = questions.filter(
+  (question): question is Extract<Question, { kind: "mcq" }> => question.kind === "mcq"
+);
+
+export const textQuestions = questions.filter(
+  (question): question is Extract<Question, { kind: "text" }> => question.kind === "text"
+);

@@ -15,8 +15,9 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Confident Father AI Assessment",
-  description: "A personalised fatherhood assessment for Platform of Papas."
+  title: "Intentional Father Assessment | Platform of Papas",
+  description:
+    "Discover your Father Archetype and the patterns shaping your family, purpose and ambition."
 };
 
 export default function RootLayout({
