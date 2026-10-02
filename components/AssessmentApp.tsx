@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandHeader } from "@/components/BrandHeader";
 import { ResultsView, type ResultData } from "@/components/ResultsView";
 import { questionsForStage } from "@/lib/questions";
@@ -23,6 +23,8 @@ const emptyLead = {
   city: ""
 };
 
+const AUTO_ADVANCE_DELAY_MS = 260;
+
 export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
   const [step, setStep] = useState<Step>("intro");
   const [stage, setStage] = useState<FatherhoodStage | null>(null);
@@ -31,11 +33,54 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [error, setError] = useState("");
   const [result, setResult] = useState<ResultData | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const questionTitleRef = useRef<HTMLHeadingElement>(null);
 
   const displayQuestions = useMemo(() => (stage ? questionsForStage(stage) : []), [stage]);
   const question = displayQuestions[questionIndex];
   const totalSteps = displayQuestions.length + 1;
   const progress = Math.round(((questionIndex + 2) / totalSteps) * 100);
+
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current !== null) clearTimeout(advanceTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (step === "questions") questionTitleRef.current?.focus();
+  }, [questionIndex, step]);
+
+  function scheduleAdvance(callback: () => void) {
+    if (isAdvancing) return;
+
+    setIsAdvancing(true);
+    advanceTimerRef.current = setTimeout(() => {
+      advanceTimerRef.current = null;
+      callback();
+      setIsAdvancing(false);
+    }, AUTO_ADVANCE_DELAY_MS);
+  }
+
+  function selectStage(nextStage: FatherhoodStage) {
+    if (isAdvancing) return;
+
+    setStage(nextStage);
+    setError("");
+    scheduleAdvance(() => setStep("questions"));
+  }
+
+  function selectAnswer(value: number) {
+    if (!question || question.kind !== "mcq" || isAdvancing) return;
+
+    setAnswers((current) => ({ ...current, [question.id]: value }));
+    setError("");
+    scheduleAdvance(() => {
+      if (questionIndex === displayQuestions.length - 1) setStep("lead");
+      else setQuestionIndex((current) => current + 1);
+    });
+  }
 
   function restart() {
     setStep("intro");
@@ -45,6 +90,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
     setAnswers({});
     setResult(null);
     setError("");
+    setIsAdvancing(false);
   }
 
   if (step === "results" && result) {
@@ -185,7 +231,8 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                   className={`option-button ${stage === item ? "is-selected" : ""}`}
                   key={item}
                   aria-pressed={stage === item}
-                  onClick={() => setStage(item)}
+                  disabled={isAdvancing}
+                  onClick={() => selectStage(item)}
                 >
                   <span className="option-dot" />
                   <span>{fatherhoodStageLabels[item]}</span>
@@ -194,22 +241,16 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
             </div>
             {error ? <p className="error-text" role="alert">{error}</p> : null}
             <div className="button-row">
-              <button className="secondary-button" onClick={() => setStep("intro")}>
+              <button
+                className="secondary-button"
+                disabled={isAdvancing}
+                onClick={() => setStep("intro")}
+              >
                 <ArrowLeft size={18} /> Back
               </button>
-              <button
-                className="primary-button"
-                onClick={() => {
-                  if (!stage) {
-                    setError("Please choose the stage that best reflects your life today.");
-                    return;
-                  }
-                  setError("");
-                  setStep("questions");
-                }}
-              >
-                Continue <ArrowRight size={18} />
-              </button>
+              <span className="auto-advance-note" aria-live="polite">
+                {isAdvancing ? "Loading your first question…" : "Choose an option to continue."}
+              </span>
             </div>
           </div>
         </main>
@@ -224,7 +265,9 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
             <div className="question-count">
               Step {questionIndex + 2} of {totalSteps} · {progress}% complete
             </div>
-            <h1 className="question-title">{question.prompt}</h1>
+            <h1 className="question-title" ref={questionTitleRef} tabIndex={-1}>
+              {question.prompt}
+            </h1>
             {question.context ? <p className="question-context">{question.context}</p> : null}
             {question.kind === "mcq" ? (
               <div className="option-list">
@@ -236,9 +279,8 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                     }`}
                     key={option.label}
                     aria-pressed={answers[question.id] === option.value}
-                    onClick={() =>
-                      setAnswers((current) => ({ ...current, [question.id]: option.value }))
-                    }
+                    disabled={isAdvancing}
+                    onClick={() => selectAnswer(option.value)}
                   >
                     <span className="option-dot" />
                     <span>{option.label}</span>
@@ -262,6 +304,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
             <div className="button-row">
               <button
                 className="secondary-button"
+                disabled={isAdvancing}
                 onClick={() => {
                   setError("");
                   if (questionIndex === 0) setStep("stage");
@@ -270,17 +313,23 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
               >
                 <ArrowLeft size={18} /> Back
               </button>
-              <button className="primary-button" onClick={goNext}>
-                {questionIndex === displayQuestions.length - 1 ? (
-                  <>
-                    Complete Assessment <CheckCircle2 size={18} />
-                  </>
-                ) : (
-                  <>
-                    Next <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
+              {question.kind === "text" ? (
+                <button className="primary-button" onClick={goNext}>
+                  {questionIndex === displayQuestions.length - 1 ? (
+                    <>
+                      Complete Assessment <CheckCircle2 size={18} />
+                    </>
+                  ) : (
+                    <>
+                      Continue <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              ) : (
+                <span className="auto-advance-note" aria-live="polite">
+                  {isAdvancing ? "Loading next question…" : "Choose an option to continue."}
+                </span>
+              )}
             </div>
           </div>
         </main>
