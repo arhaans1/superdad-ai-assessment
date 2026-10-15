@@ -3,13 +3,9 @@
 import { ArrowRight, Download, RotateCcw } from "lucide-react";
 import { BrandHeader } from "@/components/BrandHeader";
 import { assessmentVideo } from "@/lib/video";
-import type { Archetype, AssessmentSettings, InsightReport } from "@/lib/types";
+import type { AssessmentResult, AssessmentSettings } from "@/lib/types";
 
-export type ResultData = {
-  id?: string;
-  archetype: Archetype;
-  report: InsightReport;
-};
+export type ResultData = AssessmentResult;
 
 export function ResultsView({
   result,

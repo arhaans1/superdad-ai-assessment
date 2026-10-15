@@ -3,36 +3,24 @@
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandHeader } from "@/components/BrandHeader";
-import { ResultsView, type ResultData } from "@/components/ResultsView";
+import { ResultsView } from "@/components/ResultsView";
+import { useAssessmentSession } from "@/components/useAssessmentSession";
+import { assessmentResult } from "@/lib/assessment-session";
 import { questions, questionsForStage } from "@/lib/questions";
 import { fatherhoodStageLabels, fatherhoodStages } from "@/lib/types";
 import type {
-  AnswerValue,
   AssessmentAnswer,
   AssessmentSettings,
   FatherhoodStage,
   SubmitPayload
 } from "@/lib/types";
 
-type Step = "intro" | "stage" | "questions" | "lead" | "analysing" | "results";
-
-const emptyLead = {
-  name: "",
-  email: "",
-  phone: "",
-  city: ""
-};
-
 const AUTO_ADVANCE_DELAY_MS = 260;
 
 export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
-  const [step, setStep] = useState<Step>("intro");
-  const [stage, setStage] = useState<FatherhoodStage | null>(null);
-  const [lead, setLead] = useState(emptyLead);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const { session, updateSession, resetSession, hydrated, storageUnavailable } = useAssessmentSession();
+  const { step, stage, lead, questionIndex, answers, result } = session;
   const [error, setError] = useState("");
-  const [result, setResult] = useState<ResultData | null>(null);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const questionTitleRef = useRef<HTMLHeadingElement>(null);
@@ -50,7 +38,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
 
   useEffect(() => {
     if (step === "questions") questionTitleRef.current?.focus();
-  }, [questionIndex, step]);
+  }, [questionIndex, step, hydrated]);
 
   function scheduleAdvance(callback: () => void) {
     if (isAdvancing) return;
@@ -66,41 +54,54 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
   function selectStage(nextStage: FatherhoodStage) {
     if (isAdvancing) return;
 
-    setStage(nextStage);
+    updateSession({ stage: nextStage });
     setError("");
-    scheduleAdvance(() => setStep("questions"));
+    scheduleAdvance(() => updateSession({ step: "questions" }));
   }
 
   function selectAnswer(value: number) {
     if (!question || question.kind !== "mcq" || isAdvancing) return;
 
-    setAnswers((current) => ({ ...current, [question.id]: value }));
+    updateSession((current) => ({ answers: { ...current.answers, [question.id]: value } }));
     setError("");
     scheduleAdvance(() => {
-      if (questionIndex === displayQuestions.length - 1) setStep("lead");
-      else setQuestionIndex((current) => current + 1);
+      if (questionIndex === displayQuestions.length - 1) updateSession({ step: "lead" });
+      else updateSession((current) => ({ questionIndex: current.questionIndex + 1 }));
     });
   }
 
   function restart() {
-    setStep("intro");
-    setStage(null);
-    setLead(emptyLead);
-    setQuestionIndex(0);
-    setAnswers({});
-    setResult(null);
+    if (advanceTimerRef.current !== null) clearTimeout(advanceTimerRef.current);
+    resetSession();
     setError("");
     setIsAdvancing(false);
   }
 
+  const storageNotice = storageUnavailable ? (
+    <p className="session-notice" role="status">
+      Your browser cannot save progress right now. Keep this tab open to finish your assessment.
+    </p>
+  ) : null;
+
+  if (!hydrated) {
+    return (
+      <div className="page-shell">
+        <BrandHeader />
+        <main className="content-section">
+          <p className="content-inner" role="status">Loading your assessment…</p>
+        </main>
+      </div>
+    );
+  }
+
   if (step === "results" && result) {
-    return <ResultsView result={result} settings={settings} onRestart={restart} />;
+    return <>{storageNotice}<ResultsView result={result} settings={settings} onRestart={restart} /></>;
   }
 
   async function submitAssessment() {
     if (!stage) return;
     setError("");
-    setStep("analysing");
+    updateSession({ step: "analysing" });
 
     const payload: SubmitPayload = {
       ...lead,
@@ -120,18 +121,20 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
         body: JSON.stringify(payload)
       });
       const data = await response.json();
-      await minimumWait;
-
       if (!response.ok) {
         throw new Error(data.error || "Please check your answers and try again.");
       }
 
-      setResult(data);
-      setStep("results");
+      const completedResult = assessmentResult(data);
+      if (!completedResult) throw new Error("We could not load your report. Please try again.");
+      // Persist the report as soon as it arrives, even while the animation finishes.
+      updateSession({ result: completedResult });
+      await minimumWait;
+      updateSession({ step: "results" });
     } catch (err) {
       await minimumWait;
       setError(err instanceof Error ? err.message : "Something went wrong.");
-      setStep("lead");
+      updateSession({ step: "lead" });
     }
   }
 
@@ -163,15 +166,16 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
     }
 
     if (questionIndex === displayQuestions.length - 1) {
-      setStep("lead");
+      updateSession({ step: "lead" });
       return;
     }
 
-    setQuestionIndex((current) => current + 1);
+    updateSession((current) => ({ questionIndex: current.questionIndex + 1 }));
   }
 
   return (
     <div className="page-shell">
+      {storageNotice}
       <BrandHeader />
 
       {step === "intro" ? (
@@ -185,7 +189,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                 direction—then discover what may deserve your attention next.
               </p>
               <div className="button-row">
-                <button className="primary-button" onClick={() => setStep("stage")}>
+                <button className="primary-button" onClick={() => updateSession({ step: "stage" })}>
                   Start My Assessment <ArrowRight size={18} />
                 </button>
               </div>
@@ -247,7 +251,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
               <button
                 className="secondary-button"
                 disabled={isAdvancing}
-                onClick={() => setStep("intro")}
+                onClick={() => updateSession({ step: "intro" })}
               >
                 <ArrowLeft size={18} /> Back
               </button>
@@ -301,7 +305,9 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                   value={(answers[question.id] as string) || ""}
                   placeholder={question.placeholder}
                   onChange={(event) =>
-                    setAnswers((current) => ({ ...current, [question.id]: event.target.value }))
+                    updateSession((current) => ({
+                      answers: { ...current.answers, [question.id]: event.target.value }
+                    }))
                   }
                 />
               </div>
@@ -313,8 +319,8 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                 disabled={isAdvancing}
                 onClick={() => {
                   setError("");
-                  if (questionIndex === 0) setStep("stage");
-                  else setQuestionIndex((current) => current - 1);
+                  if (questionIndex === 0) updateSession({ step: "stage" });
+                  else updateSession((current) => ({ questionIndex: current.questionIndex - 1 }));
                 }}
               >
                 <ArrowLeft size={18} /> Back
@@ -364,7 +370,9 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
                     type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
                     value={lead[key as keyof typeof lead]}
                     onChange={(event) =>
-                      setLead((current) => ({ ...current, [key]: event.target.value }))
+                      updateSession((current) => ({
+                        lead: { ...current.lead, [key]: event.target.value }
+                      }))
                     }
                     required
                   />
@@ -376,7 +384,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
             </p>
             {error ? <p className="error-text" role="alert">{error}</p> : null}
             <div className="button-row">
-              <button className="secondary-button" onClick={() => setStep("questions")}>
+              <button className="secondary-button" onClick={() => updateSession({ step: "questions" })}>
                 <ArrowLeft size={18} /> Back
               </button>
               <button

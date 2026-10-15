@@ -74,6 +74,12 @@ export type InsightReport = {
   nextReflections: string[];
 };
 
+export type AssessmentResult = {
+  id?: string;
+  archetype: Archetype;
+  report: InsightReport;
+};
+
 export type AssessmentSettings = {
   videoUrl: string;
   bookingUrl: string;

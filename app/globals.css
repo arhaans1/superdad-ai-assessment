@@ -50,6 +50,15 @@ button:disabled {
   background: var(--white);
 }
 
+.session-notice {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  background: rgba(197, 138, 43, 0.12);
+  color: var(--slate-dark);
+  text-align: center;
+  line-height: 1.5;
+}
+
 .brand-header {
   padding: 1rem clamp(1rem, 4vw, 3rem);
   border-bottom: 1px solid rgba(47, 79, 92, 0.16);
