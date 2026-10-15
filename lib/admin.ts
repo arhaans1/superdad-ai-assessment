@@ -1,5 +1,6 @@
 import type { Submission } from "@prisma/client";
 import { listSubmissions } from "@/lib/submissions";
+import { ASSESSMENT_VERSION } from "@/lib/questions";
 
 export type AdminStats = Awaited<ReturnType<typeof buildStats>>;
 
@@ -33,7 +34,7 @@ function buildStats(submissions: Submission[]) {
 
   const scoredSubmissions = submissions.filter(
     (submission) =>
-      submission.assessmentVersion === "intentional-father-v2" &&
+      ["intentional-father-v2", ASSESSMENT_VERSION].includes(submission.assessmentVersion) &&
       submission.scoreOverall !== null
   );
   const averageOverall = scoredSubmissions.length

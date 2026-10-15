@@ -90,7 +90,8 @@ export default async function SubmissionDetailPage({
   const scores = v2Scores(submission);
   const answers = submission.answers as unknown as AssessmentAnswer[];
   const stage = isStage(submission.fatherhoodStage) ? submission.fatherhoodStage : null;
-  const displayQuestions = stage ? questionsForStage(stage) : [];
+  const displayQuestions = stage ? questionsForStage(stage, submission.assessmentVersion) : [];
+  const fatherhoodReflection = answers.find((answer) => answer.questionId === "q24")?.value;
   const report = isInsightReport(submission.reportJson) ? submission.reportJson : null;
 
   function questionText(answer: AssessmentAnswer) {
@@ -133,6 +134,12 @@ export default async function SubmissionDetailPage({
               <strong>Fatherhood stage:</strong>{" "}
               {stage ? fatherhoodStageLabels[stage] : "Legacy assessment"}
             </p>
+            {typeof fatherhoodReflection === "string" ? (
+              <div>
+                <strong>What does redefining fatherhood mean to you?</strong>
+                <p style={{ whiteSpace: "pre-wrap" }}>{fatherhoodReflection}</p>
+              </div>
+            ) : null}
           </div>
           <div className="data-card">
             <h2 className="section-heading">Internal gap signals</h2>

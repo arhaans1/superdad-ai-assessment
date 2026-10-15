@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandHeader } from "@/components/BrandHeader";
 import { ResultsView, type ResultData } from "@/components/ResultsView";
-import { questionsForStage } from "@/lib/questions";
+import { questions, questionsForStage } from "@/lib/questions";
 import { fatherhoodStageLabels, fatherhoodStages } from "@/lib/types";
 import type {
   AnswerValue,
@@ -39,7 +39,7 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
 
   const displayQuestions = useMemo(() => (stage ? questionsForStage(stage) : []), [stage]);
   const question = displayQuestions[questionIndex];
-  const totalSteps = displayQuestions.length + 1;
+  const totalSteps = questions.length + 1;
   const progress = Math.round(((questionIndex + 2) / totalSteps) * 100);
 
   useEffect(() => {
@@ -154,7 +154,10 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
       setError("Please choose one answer.");
       return;
     }
-    if (question.kind === "text" && (typeof value !== "string" || value.trim().length < 3)) {
+    if (
+      question.kind === "text" &&
+      (typeof value !== "string" || value.trim().length < (question.minLength ?? 3))
+    ) {
       setError("Please write a short response.");
       return;
     }
@@ -217,9 +220,9 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
         <main className="content-section">
           <div className="assessment-panel">
             <div className="progress-track" aria-label="Assessment progress">
-              <div className="progress-fill" style={{ width: `${Math.round(100 / 24)}%` }} />
+              <div className="progress-fill" style={{ width: `${Math.round(100 / totalSteps)}%` }} />
             </div>
-            <div className="question-count">Step 1 of 24</div>
+            <div className="question-count">Step 1 of {totalSteps}</div>
             <h1 className="question-title">Where are you currently in your fatherhood journey?</h1>
             <p className="question-context">
               Your answer adapts a few situations so the assessment reflects your life today.
@@ -289,9 +292,12 @@ export function AssessmentApp({ settings }: { settings: AssessmentSettings }) {
               </div>
             ) : (
               <div className="field">
-                <div className="helper-text">{question.helper}</div>
+                {question.helper ? <div className="helper-text">{question.helper}</div> : null}
                 <textarea
-                  aria-label="Your written reflection"
+                  aria-label={question.prompt}
+                  required
+                  minLength={question.minLength ?? 3}
+                  maxLength={2000}
                   value={(answers[question.id] as string) || ""}
                   placeholder={question.placeholder}
                   onChange={(event) =>

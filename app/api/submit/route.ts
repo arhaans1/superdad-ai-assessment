@@ -3,6 +3,7 @@ import { determineArchetype, computeScores } from "@/lib/scoring";
 import { generateReport } from "@/lib/report";
 import { createSubmission } from "@/lib/submissions";
 import { validateSubmitPayload } from "@/lib/validation";
+import { ASSESSMENT_VERSION } from "@/lib/questions";
 
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60_000;
@@ -74,7 +75,7 @@ async function saveSubmissionWithRetry({
         ].join("\n\n"),
         focusShift: report.nextReflections.join("\n"),
         reportJson: report,
-        assessmentVersion: "intentional-father-v2",
+        assessmentVersion: ASSESSMENT_VERSION,
         aiModel: report.aiModel,
         userAgent
       });

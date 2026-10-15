@@ -1,5 +1,6 @@
 import { isAdminAuthenticated } from "@/lib/auth";
 import { listSubmissions } from "@/lib/submissions";
+import type { AssessmentAnswer } from "@/lib/types";
 
 const headers = [
   "createdAt",
@@ -8,6 +9,7 @@ const headers = [
   "phone",
   "city",
   "fatherhoodStage",
+  "fatherhoodReflection",
   "archetypeName",
   "scoreIdentity",
   "scoreConditioning",
@@ -53,7 +55,13 @@ export async function GET() {
     headers.join(","),
     ...submissions.map((submission) =>
       headers
-        .map((header) => csvCell(submission[header as keyof typeof submission]))
+        .map((header) => {
+          if (header === "fatherhoodReflection") {
+            const answers = submission.answers as unknown as AssessmentAnswer[];
+            return csvCell(answers.find((answer) => answer.questionId === "q24")?.value);
+          }
+          return csvCell(submission[header as keyof typeof submission]);
+        })
         .join(",")
     )
   ];

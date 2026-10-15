@@ -44,8 +44,8 @@ export function validateSubmitPayload(body: unknown): SubmitPayload {
 
   for (const question of textQuestions) {
     const value = map.get(question.id);
-    if (typeof value !== "string" || value.trim().length < 3) {
-      throw new Error("Please complete both written reflection questions.");
+    if (typeof value !== "string" || value.trim().length < (question.minLength ?? 3)) {
+      throw new Error("Please complete all written reflection questions.");
     }
   }
 
@@ -78,7 +78,11 @@ function normaliseAnswer(answer: unknown): AssessmentAnswer {
 
   if (typeof value === "string") {
     const numeric = Number(value);
-    if (Number.isInteger(numeric) && numeric >= 0 && numeric <= 4) {
+    if (
+      scoredQuestions.some((question) => question.id === questionId) &&
+      value.trim() !== "" &&
+      Number.isInteger(numeric) && numeric >= 0 && numeric <= 4
+    ) {
       return { questionId, value: numeric };
     }
     return { questionId, value: value.trim().slice(0, 2000) };
