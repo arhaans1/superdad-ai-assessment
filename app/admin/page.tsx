@@ -100,7 +100,9 @@ export default async function AdminPage({
                   ? "Please use a complete HTTPS URL."
                   : resolvedParams.settings === "missing_url"
                     ? "Add a URL before enabling that section."
-                    : "Settings could not be saved. Check the database connection and try again."}
+                    : resolvedParams.settings === "unsupported_video"
+                      ? "Use a Google Drive video, YouTube, Vimeo, Loom, or direct MP4 URL for playback on the results page."
+                      : "Settings could not be saved. Check the database connection and try again."}
               </p>
             ) : null}
             <div className="settings-grid">
@@ -114,6 +116,11 @@ export default async function AdminPage({
                   placeholder="https://youtube.com/watch?v=..."
                   defaultValue={assessmentSettings.videoUrl}
                 />
+                <p className="helper-text">
+                  Plays on the results page. Paste a Google Drive video share link, YouTube,
+                  Vimeo, Loom, or direct MP4 URL. Google Drive access must be set to
+                  “Anyone with the link” as Viewer.
+                </p>
                 <label className="toggle-row">
                   <input
                     type="checkbox"

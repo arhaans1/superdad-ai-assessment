@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/auth";
 import { updateAssessmentSettings, validOptionalHttpsUrl } from "@/lib/settings";
+import { assessmentVideo } from "@/lib/video";
 
 export async function saveAssessmentSettings(formData: FormData) {
   if (!(await isAdminAuthenticated())) redirect("/admin");
@@ -18,6 +19,9 @@ export async function saveAssessmentSettings(formData: FormData) {
   }
   if ((videoEnabled && !videoUrl) || (bookingEnabled && !bookingUrl)) {
     redirect("/admin?settings=missing_url#assessment-settings");
+  }
+  if (videoEnabled && !assessmentVideo(videoUrl)) {
+    redirect("/admin?settings=unsupported_video#assessment-settings");
   }
 
   try {

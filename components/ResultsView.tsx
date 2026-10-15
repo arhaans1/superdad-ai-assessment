@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowRight, Download, PlayCircle, RotateCcw } from "lucide-react";
+import { ArrowRight, Download, RotateCcw } from "lucide-react";
 import { BrandHeader } from "@/components/BrandHeader";
+import { assessmentVideo } from "@/lib/video";
 import type { Archetype, AssessmentSettings, InsightReport } from "@/lib/types";
 
 export type ResultData = {
@@ -9,30 +10,6 @@ export type ResultData = {
   archetype: Archetype;
   report: InsightReport;
 };
-
-function videoEmbedUrl(rawUrl: string): string | null {
-  try {
-    const url = new URL(rawUrl);
-    if (url.hostname === "youtu.be") {
-      const id = url.pathname.split("/").filter(Boolean)[0];
-      return id ? `https://www.youtube.com/embed/${id}` : null;
-    }
-    if (url.hostname.includes("youtube.com")) {
-      const id = url.searchParams.get("v") || url.pathname.split("/").filter(Boolean).pop();
-      return id ? `https://www.youtube.com/embed/${id}` : null;
-    }
-    if (url.hostname.includes("vimeo.com")) {
-      const id = url.pathname.split("/").filter(Boolean).pop();
-      return id ? `https://player.vimeo.com/video/${id}` : null;
-    }
-    if (url.hostname.includes("loom.com")) {
-      return rawUrl.replace("/share/", "/embed/");
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 export function ResultsView({
   result,
@@ -43,7 +20,7 @@ export function ResultsView({
   settings: AssessmentSettings;
   onRestart?: () => void;
 }) {
-  const embedUrl = videoEmbedUrl(settings.videoUrl);
+  const video = assessmentVideo(settings.videoUrl);
   const showVideo = settings.videoEnabled && Boolean(settings.videoUrl);
   const showBooking = settings.bookingEnabled && Boolean(settings.bookingUrl);
 
@@ -106,60 +83,55 @@ export function ResultsView({
           </div>
         </section>
 
-        {showVideo ? (
+        {showVideo || showBooking ? (
           <section className="content-section video-section">
-            <div className="content-inner video-layout">
-              <div>
-                <div className="eyebrow dark">Recognition is the beginning</div>
-                <h2 className="section-heading">Understand why these patterns may be showing up</h2>
-                <p className="diagnosis">
-                  Watch this short message from Vishal to see how seven underlying gaps can
-                  connect fatherhood, relationships, work, confidence and life direction.
-                </p>
-              </div>
-              {embedUrl ? (
-                <div className="video-frame">
-                  <iframe
-                    src={embedUrl}
-                    title="A message from Vishal about your assessment"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+            <div className="content-inner result-next-steps">
+              {showVideo ? (
+                <div className="video-layout">
+                  <div className="video-heading">
+                    <h2 className="section-heading">Understand why these patterns may be showing up.</h2>
+                    <p>Watch this quick video.</p>
+                  </div>
+                  {video ? (
+                    <div className="video-frame">
+                      {video.kind === "embed" ? (
+                        <iframe
+                          src={video.src}
+                          title="A message from Vishal about your assessment"
+                          loading="lazy"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          src={video.src}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          aria-label="A message from Vishal about your assessment"
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <p role="status">The video is currently unavailable. Please try again later.</p>
+                  )}
                 </div>
-              ) : (
-                <a
-                  className="primary-button"
-                  href={settings.videoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <PlayCircle size={18} /> Watch the Video
-                </a>
-              )}
-            </div>
-          </section>
-        ) : null}
+              ) : null}
 
-        {showBooking ? (
-          <section className="content-section">
-            <div className="content-inner booking-card">
-              <div>
-                <div className="eyebrow">Want clarity on what to rebuild next?</div>
-                <h2>Book a short conversation with our team.</h2>
-                <p>
-                  We’ll understand where you are today, what you want life and fatherhood to
-                  look like, and what may currently be getting in the way.
-                </p>
-              </div>
-              <a
-                className="primary-button light-button"
-                href={settings.bookingUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Book a Call <ArrowRight size={18} />
-              </a>
+              {showBooking ? (
+                <div className="booking-card">
+                  <h2>Book a short conversation with our team.</h2>
+                  <p>Book a one-to-one personalised assessment with our team.</p>
+                  <a
+                    className="primary-button light-button"
+                    href={settings.bookingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Book a Call <ArrowRight size={18} />
+                  </a>
+                </div>
+              ) : null}
             </div>
           </section>
         ) : null}

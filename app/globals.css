@@ -469,14 +469,32 @@ button:disabled {
   background: rgba(47, 79, 92, 0.06);
 }
 
+.result-next-steps {
+  width: min(900px, 100%);
+  display: grid;
+  gap: clamp(2rem, 5vw, 3rem);
+  text-align: center;
+}
+
 .video-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(340px, 1.2fr);
-  align-items: center;
-  gap: clamp(1.5rem, 5vw, 3.5rem);
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.video-heading .section-heading {
+  margin: 0;
+}
+
+.video-heading p {
+  margin: 0.75rem 0 0;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.6;
 }
 
 .video-frame {
+  width: 100%;
+  margin-inline: auto;
   aspect-ratio: 16 / 9;
   background: var(--slate-dark);
   border-radius: 12px;
@@ -484,10 +502,13 @@ button:disabled {
   box-shadow: 0 22px 55px rgba(47, 79, 92, 0.18);
 }
 
-.video-frame iframe {
+.video-frame iframe,
+.video-frame video {
+  display: block;
   width: 100%;
   height: 100%;
   border: 0;
+  object-fit: contain;
 }
 
 .booking-card {
@@ -496,19 +517,20 @@ button:disabled {
   border-radius: 14px;
   padding: clamp(1.5rem, 5vw, 3rem);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .booking-card h2 {
+  margin: 0;
   color: var(--white);
   font-size: clamp(2rem, 4vw, 3rem);
 }
 
 .booking-card p {
   max-width: 720px;
-  margin-bottom: 0;
+  margin: 0;
   line-height: 1.75;
   color: rgba(255, 255, 255, 0.84);
 }
@@ -755,11 +777,6 @@ button:disabled {
   .video-layout,
   .settings-grid {
     grid-template-columns: 1fr;
-  }
-
-  .booking-card {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .brand-header {
